@@ -46,9 +46,8 @@ class Record:
                 elem.value = new_phone
 
 
+address_book = AddressBook()
 
-
-RECORDS = AddressBook()
 
 def error_handler(func):
     def inner(*args, **kwargs):
@@ -64,7 +63,6 @@ def error_handler(func):
             return 'Unknown command or parametrs, please try again.'
     return inner
 
-
 @error_handler
 def add(*args):
     command_list = args[0]
@@ -73,11 +71,12 @@ def add(*args):
         return
     contact_name = command_list[0]
     contact_phone = command_list[1]
-    if not RECORDS.get(contact_name):
+    if contact_name not in address_book:
+        # if not RECORDS.get(contact_name):
         new_record = Record(contact_name, contact_phone)
-        RECORDS.add_record(new_record)
+        address_book.add_record(new_record)
     else:
-        RECORDS[contact_name].add_phone(contact_phone)
+        address_book[contact_name].add_phone(contact_phone)
 
 @error_handler
 def change_phone(*args):
@@ -85,11 +84,11 @@ def change_phone(*args):
     if not len(command_list) == 3:
         print("Give me name, old and new phone please")
         return
-
+    # name, old_phone, new_phone, *_ = command_list
     contact_name = command_list[0]
     contact_old_phone = command_list[1]
     contact_new_phone = command_list[2]
-    RECORDS[contact_name].edit_phone(contact_old_phone, contact_new_phone)
+    address_book[contact_name].edit_phone(contact_old_phone, contact_new_phone)
 
 @error_handler
 def delete_phone(*args):
@@ -100,12 +99,12 @@ def delete_phone(*args):
 
     contact_name = command_list[0]
     contact_phone = command_list[1]
-    RECORDS[contact_name].delete_phone(contact_phone)
+    address_book[contact_name].delete_phone(contact_phone)
 
 
 @error_handler
 def show():
-    for key, data in RECORDS.items():
+    for key, data in address_book.items():
         print(f"Name: {key} - Phone: {', '.join(phone.value for phone in data.phones)}")
 
 @error_handler
@@ -116,7 +115,7 @@ def phone(*args):
         return
 
     contact_name = args[0][0]
-    print(RECORDS[contact_name])
+    print(address_book[contact_name])
 
 def hello(_):
     return "How can I help you?"
@@ -130,7 +129,7 @@ def get_handler(command_list):
 
 
 def read_command_list(command_list: list):
-    command = OPERATIONS[command_list.pop(0).lower()]
+    command = HANDLERS[command_list.pop(0).lower()]
     command = read_command_list(command_list) if command == read_command_list else command
     return command
 
