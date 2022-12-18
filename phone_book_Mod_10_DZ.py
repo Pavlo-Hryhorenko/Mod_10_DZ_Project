@@ -48,7 +48,7 @@ class Record:
 
 
 
-USERS = {}
+RECORDS = AddressBook()
 
 def error_handler(func):
     def inner(*args, **kwargs):
@@ -66,29 +66,57 @@ def error_handler(func):
 
 
 @error_handler
-def add_user(args):
-    name, phone = args
-    USERS[name] = phone
-    return f"User {name.upper()} added"
+def add(*args):
+    command_list = args[0]
+    if not len(command_list) == 2:
+        print("Give me name and phone please")
+        return
+    contact_name = command_list[0]
+    contact_phone = command_list[1]
+    if not RECORDS.get(contact_name):
+        new_record = Record(contact_name, contact_phone)
+        RECORDS.add_record(new_record)
+    else:
+        RECORDS[contact_name].add_phone(contact_phone)
 
 @error_handler
-def change_phone(args):
-    name, phone = args
-    old_phone = USERS[name]
-    USERS[name] = phone
-    return f"User {name.upper()} have a new phone number: {phone}\nold was: {old_phone}"
+def change_phone(*args):
+    command_list = args[0]
+    if not len(command_list) == 3:
+        print("Give me name, old and new phone please")
+        return
+
+    contact_name = command_list[0]
+    contact_old_phone = command_list[1]
+    contact_new_phone = command_list[2]
+    RECORDS[contact_name].edit_phone(contact_old_phone, contact_new_phone)
 
 @error_handler
-def show_number(args):
-    user = args[0]
-    phone = USERS[user]
-    return f"{user}: {phone}"
+def delete_phone(*args):
+    command_list = args[0]
+    if not len(command_list) == 2:
+        print("Give me name and phone please")
+        return
 
-def show_all(_):
-    result = ""
-    for name, phone in USERS.items():
-        result += f"{name.upper()}: {phone}\n"
-    return result
+    contact_name = command_list[0]
+    contact_phone = command_list[1]
+    RECORDS[contact_name].delete_phone(contact_phone)
+
+
+@error_handler
+def show():
+    for key, data in RECORDS.items():
+        print(f"Name: {key} - Phone: {', '.join(phone.value for phone in data.phones)}")
+
+@error_handler
+def phone(*args):
+    command_list = args[0]
+    if not len(command_list) == 1:
+        print("Enter user name")
+        return
+
+    contact_name = args[0][0]
+    print(RECORDS[contact_name])
 
 def hello(_):
     return "How can I help you?"
@@ -96,15 +124,27 @@ def hello(_):
 def exit(_):
     return "Good bye!"
 
+@error_handler
+def get_handler(command_list):
+    return read_command_list(command_list)
+
+
+def read_command_list(command_list: list):
+    command = OPERATIONS[command_list.pop(0).lower()]
+    command = read_command_list(command_list) if command == read_command_list else command
+    return command
+
 HANDLERS = {
     "hello": hello,
     "good_bye": exit,
     "close": exit,
     "exit": exit,
-    "add": add_user,
+    "add": add,
     "change": change_phone,
-    "show_all": show_all,
-    "phone": show_number,
+    "show_all": show,
+    "show": read_command_list,
+    "phone": phone,
+    "delete": delete_phone
 }
 
 def parser_input(user_input):
